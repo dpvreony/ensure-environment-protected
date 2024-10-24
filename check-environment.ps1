@@ -1,6 +1,6 @@
 # Variables
-$repo = "${{ github.repository }}"
-$environment = "${{ env.ENVIRONMENT_NAME }}"
+$repo = $env:GITHUB_REPOSITORY
+$environment = $env:ENVIRONMENT_NAME
 $url = "https://api.github.com/repos/$repo/environments/$environment"
 $headers = @{ Authorization = "token $env:GITHUB_TOKEN" }
 
