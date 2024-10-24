@@ -1,0 +1,19 @@
+name: 'Ensure Environment exists and protected'
+description: 'Check if the specified GitHub environment exists and has protection rules'
+author: 'David Vreony'
+inputs:
+  github_token:
+    description: 'GitHub token to authenticate API requests'
+    required: true
+  environment_name:
+    description: 'The name of the environment to check'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Run environment check
+      shell: pwsh
+      run: ./check-environment.ps1
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        ENVIRONMENT_NAME: ${{ inputs.environment_name }}
