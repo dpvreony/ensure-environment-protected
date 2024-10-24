@@ -31,14 +31,13 @@ on:
     branches:
       - main
 
-permissions:
-  actions: read
-  contents: read
-  deployments: read
-
 jobs:
   check-environment:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      deployments: read
     steps:
       - name: Check if 'production' environment exists and has protection rules
         uses: dpvreony/ensure-environment-protected@main
