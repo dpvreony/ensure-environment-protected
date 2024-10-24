@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
+jobs:
+  build:
+    permissions:
+      actions: read
+      contents: read
+      deployments: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if 'ci' environment exists and has protection rules
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment_name: 'ci'
