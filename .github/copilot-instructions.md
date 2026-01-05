@@ -43,7 +43,7 @@ To test changes to the action:
 
 ## API Integration
 
-- Uses GitHub REST API: `https://api.github.com/repos/{repo}/environments/{environment}`
+- Uses GitHub REST API: `https://api.github.com/repos/{owner}/{repo}/environments/{environment}` (where `{owner}/{repo}` is the repository full name like `dpvreony/ensure-environment-protected`)
 - Requires authentication via GitHub token
 - Needs specific permissions: `actions: read`, `contents: read`, `deployments: read`
 
