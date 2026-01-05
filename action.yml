@@ -8,6 +8,14 @@ inputs:
   environment_name:
     description: 'The name of the environment to check'
     required: true
+  require-reviewers:
+    description: 'Check that the environment has at least one required reviewer (secure first)'
+    required: false
+    default: 'true'
+  require-prevent-self-review:
+    description: 'Check that the environment has prevent self-review enabled'
+    required: false
+    default: 'false'
 runs:
   using: 'composite'
   steps:
@@ -19,6 +27,8 @@ runs:
         $environment = $env:ENVIRONMENT_NAME
         $url = "https://api.github.com/repos/$repo/environments/$environment"
         $headers = @{ Authorization = "token $env:GITHUB_TOKEN" }
+        $requireReviewers = $env:REQUIRE_REVIEWERS -eq 'true'
+        $requirePreventSelfReview = $env:REQUIRE_PREVENT_SELF_REVIEW -eq 'true'
 
         # Make the API request
         try {
@@ -47,8 +57,59 @@ runs:
             exit 1
         }
 
+        # Extract required_reviewers rules for efficiency (used by multiple checks)
+        $requiredReviewerRules = $protectionRules | Where-Object { $_.type -eq 'required_reviewers' }
+
+        # Check for required reviewers if flag is enabled
+        if ($requireReviewers) {
+            if ($requiredReviewerRules.Count -eq 0) {
+                Write-Host "Error: '$environment' environment has no required_reviewers protection rule configured."
+                exit 1
+            }
+            
+            $hasReviewers = $false
+            foreach ($rule in $requiredReviewerRules) {
+                if ($rule.reviewers -and $rule.reviewers.Count -gt 0) {
+                    $hasReviewers = $true
+                    break
+                }
+            }
+            
+            if (-not $hasReviewers) {
+                Write-Host "Error: '$environment' environment has required_reviewers protection rule but no actual reviewers are assigned."
+                exit 1
+            }
+            
+            Write-Host "'$environment' environment has required reviewers configured."
+        }
+
+        # Check for prevent self-review if flag is enabled
+        if ($requirePreventSelfReview) {
+            if ($requiredReviewerRules.Count -eq 0) {
+                Write-Host "Error: '$environment' environment has no required_reviewers protection rule to check prevent_self_review."
+                exit 1
+            }
+            
+            $hasPreventSelfReview = $false
+            foreach ($rule in $requiredReviewerRules) {
+                if ($rule.prevent_self_review -eq $true) {
+                    $hasPreventSelfReview = $true
+                    break
+                }
+            }
+            
+            if (-not $hasPreventSelfReview) {
+                Write-Host "Error: '$environment' environment does not have prevent_self_review enabled."
+                exit 1
+            }
+            
+            Write-Host "'$environment' environment has prevent_self_review enabled."
+        }
+
         Write-Host "'$environment' environment exists and has protection rules."
 
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+        REQUIRE_REVIEWERS: ${{ inputs.require-reviewers }}
+        REQUIRE_PREVENT_SELF_REVIEW: ${{ inputs.require-prevent-self-review }}
