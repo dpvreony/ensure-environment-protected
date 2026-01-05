@@ -97,7 +97,8 @@ The action fails with the following errors:
 - **404 Not Found**: If the specified environment does not exist.
 - **403 Forbidden**: If the GitHub token provided does not have sufficient permissions to read the environment.
 - **No Protection Rules**: If the environment exists but has no protection rules configured.
-- **No Required Reviewers**: If the environment has no required reviewers configured (when `require-reviewers` is `true`, which is the default).
+- **No Required Reviewers Protection Rule**: If the environment has no `required_reviewers` protection rule configured (when `require-reviewers` is `true`, which is the default).
+- **No Reviewers Assigned**: If the environment has a `required_reviewers` protection rule but no actual reviewers are assigned to it (when `require-reviewers` is `true`).
 - **No Prevent Self-Review**: If the environment does not have prevent self-review enabled (when `require-prevent-self-review` is `true`).
 
 ## Permissions
