@@ -23,6 +23,7 @@ This GitHub Action checks if a specified environment exists in the repository an
 This action does not produce any outputs but will fail the workflow if:
 - The environment does not exist.
 - The environment has no protection rules (such as required approvals).
+- The environment only has deployment branch policy (`branch_policy`) protection rules but no rules requiring human approval (`required_reviewers` or `wait_timer`). Deployment branch policies are available on all GitHub plans, but `required_reviewers` and `wait_timer` require GitHub Pro, Team, or Enterprise for private repositories. An environment with only `branch_policy` rules is considered insufficiently protected.
 - The environment has no required reviewers configured (when `require-reviewers` is `true`, which is the default).
 - The environment does not have prevent self-review enabled (when `require-prevent-self-review` is `true`).
 - The action lacks necessary permissions to read the environment or its rules.
@@ -96,7 +97,9 @@ steps:
 The action fails with the following errors:
 - **404 Not Found**: If the specified environment does not exist.
 - **403 Forbidden**: If the GitHub token provided does not have sufficient permissions to read the environment.
+- **Other API errors**: Any unexpected API error will cause the action to fail.
 - **No Protection Rules**: If the environment exists but has no protection rules configured.
+- **Branch Policy Only**: If the environment only has `branch_policy` protection rules and no rules requiring human approval (`required_reviewers` or `wait_timer`). This commonly occurs with private repositories on GitHub Free, which do not include a license for environment protection rules.
 - **No Required Reviewers Protection Rule**: If the environment has no `required_reviewers` protection rule configured (when `require-reviewers` is `true`, which is the default).
 - **No Reviewers Assigned**: If the environment has a `required_reviewers` protection rule but no actual reviewers are assigned to it (when `require-reviewers` is `true`).
 - **No Prevent Self-Review**: If the environment does not have prevent self-review enabled (when `require-prevent-self-review` is `true`).
