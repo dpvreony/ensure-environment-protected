@@ -47,18 +47,31 @@ runs:
             }
 
             Write-Host "Error: '$statusCode': $response"
+            exit 1
         }
 
         # Check if protection rules exist
         $protectionRules = $response.protection_rules
 
-        if ($protectionRules.Count -eq 0) {
+        if (@($protectionRules).Count -eq 0) {
             Write-Host "Error: '$environment' environment exists but has no protection rules (approval requirements)."
             exit 1
         }
 
+        # Check that meaningful protection rules exist beyond branch_policy.
+        # branch_policy rules are available on all plans (including GitHub Free for private repos)
+        # but do not require human approval before deployment. Rules such as required_reviewers
+        # and wait_timer are only available on paid plans for private repos, so their absence
+        # indicates that environment protection is not licensed/enabled for this repository.
+        $humanApprovalRules = @($protectionRules | Where-Object { $_.type -ne 'branch_policy' })
+        if ($humanApprovalRules.Count -eq 0) {
+            Write-Host "Error: '$environment' environment only has deployment branch policy protection rules but no rules requiring human approval (required_reviewers or wait_timer)."
+            Write-Host "This typically means the repository plan does not support environment protection rules (e.g. private repos on GitHub Free)."
+            exit 1
+        }
+
         # Extract required_reviewers rules for efficiency (used by multiple checks)
-        $requiredReviewerRules = $protectionRules | Where-Object { $_.type -eq 'required_reviewers' }
+        $requiredReviewerRules = @($protectionRules | Where-Object { $_.type -eq 'required_reviewers' })
 
         # Check for required reviewers if flag is enabled
         if ($requireReviewers) {
